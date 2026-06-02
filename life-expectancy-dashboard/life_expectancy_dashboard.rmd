@@ -15,9 +15,6 @@ library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(paletteer) 
-#^you should definitely check out this library if you haven't before-
-#it has so many cool palettes AND shows you how it looks for people-
-#with different types of color blindness
 
 # Load the gapminder dataset and explore the structure of the data.
 library(gapminder)
@@ -64,7 +61,7 @@ p1 <- ggplot(data = data, aes(x = year, y = avg_life)) +
     title = "Average Life Expectancy Over Time by Continent"
   ) +
   theme_minimal() +
-  scale_colour_paletteer_d("rcartocolor::Antique") #for paletteer library; website GIVES you this code btw
+  scale_colour_paletteer_d("rcartocolor::Antique")
 
 p1 
 ```

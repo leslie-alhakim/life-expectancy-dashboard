@@ -1,0 +1,183 @@
+---
+title: 'P1: R Project'
+author: "Leslie Alhakim"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1: Data Wrangling
+
+```{r data-wrangling}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(paletteer) 
+#^you should definitely check out this library if you haven't before-
+#it has so many cool palettes AND shows you how it looks for people-
+#with different types of color blindness
+
+# Load the gapminder dataset and explore the structure of the data.
+library(gapminder)
+summary(gapminder)
+
+# Identify important columns such as country, continent, year, lifeExp, gdpPercap, and pop.
+names(gapminder)
+
+# Filter the dataset to focus on the years after 1950.
+data <- gapminder %>% filter(`year` > 1950)
+head(data$year)
+
+# Group the data by continent and year, and calculate:
+# - The average life expectancy per continent per year.
+# - The average GDP per capita per continent per year.
+# - The total population per continent per year.
+grouped_data <- gapminder %>% 
+  group_by(continent, year) %>% 
+  summarise(
+    avg_life = mean(lifeExp, na.rm = TRUE),
+    avg_gdp = mean(gdpPercap, na.rm = TRUE),
+    total_pop = sum(pop, na.rm = TRUE),
+    .groups = "drop")
+
+data <- gapminder %>%
+  left_join(grouped_data, by = c("continent", "year")) #keep og
+
+head(data)
+
+# Save clean data
+write_csv(data, "gapminder_data.csv")
+```
+
+## Part 2: Data Visualization with ggplot2
+
+```{r ggplot2}
+# Line Chart: Plot each continent's average life expectancy over time.
+p1 <- ggplot(data = data, aes(x = year, y = avg_life)) +
+  geom_line(aes(colour = continent)) +
+  labs(
+    colour = "Continent",
+    x = "Year",
+    y = "Average Life Expectancy",
+    title = "Average Life Expectancy Over Time by Continent"
+  ) +
+  theme_minimal() +
+  scale_colour_paletteer_d("rcartocolor::Antique") #for paletteer library; website GIVES you this code btw
+
+p1 
+```
+
+```{r ggplot2}
+# Scatter Plot: Create a scatter plot to show the relationship between GDP per capita and life expectancy for a specific year. Size the points by population.
+data2002 <- data %>% filter(year == 2002)
+
+p2 <- ggplot(data = data2002, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(aes(size = pop, colour = continent)) +
+  labs(
+    colour = "Continent",
+    x = "GDP per Capita",
+    y = "Life Expectancy",
+    title = "GDP per Capita v Life Expectancy in 2002"
+  ) +
+  theme_minimal() +
+  scale_colour_paletteer_d("rcartocolor::Antique")
+
+p2
+```
+
+```{r ggplot2}
+# Bar Chart: Display the total population by continent for a specific year.
+p3 <- ggplot(data = data2002, aes(x = continent, y = total_pop)) +
+  geom_col(aes(fill = continent)) +
+  labs(
+    fill = "Continent",
+    x = "Continent",
+    y = "Total Population",
+    title = "Total Population by Continent in 2002"
+  ) +
+  theme_minimal() +
+  scale_fill_paletteer_d("rcartocolor::Antique")
+  
+p3
+```
+
+```{r ggplot2}
+#  Box Plot: Create a box plot showing each continent's life expectancy distribution.
+p4 <- ggplot(data = data, aes(x = continent, y = lifeExp)) +
+  geom_boxplot(aes(fill = continent)) +
+  labs(
+    fill = "Continent",
+    x = "Continent",
+    y = "Life Expectancy",
+    title = "Life Expectancy Distribution by Continent"
+  ) +
+  theme_minimal() +
+  scale_fill_paletteer_d("rcartocolor::Antique")
+
+p4
+```
+
+```{r ggplot2}
+# Faceted Plot: Plot GDP per capita vs life expectancy and use facet wrapping to display the data for each year.
+p5 <- ggplot(data = data, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(aes(colour = continent)) +
+  facet_wrap(~ year) +
+  labs(
+    colour = "Continent",
+    x = "GDP per Capita",
+    y = "Life Expectancy",
+    title = "GDP per Capita v Life Expectancy"
+  ) +
+  theme_minimal() +
+  scale_colour_paletteer_d("rcartocolor::Antique") +
+  scale_x_log10(labels = scales::comma) #looks way cleaner
+
+p5
+```
+
+```{r ggplot2}
+# Density Plot: Create a density plot to show life expectancy distribution across continents.
+p6 <- ggplot(data = data, aes(x = lifeExp)) +
+  geom_density(aes(fill = continent), alpha = 0.3) +
+  labs(
+    fill = "Continent",
+    x = "Life Expectancy",
+    y = "Density",
+    title = "Life Expectancy Across Continents"
+  ) +
+  theme_minimal() +
+  scale_fill_paletteer_d("rcartocolor::Antique")
+
+p6
+```
+
+## Part 3: Interactive Visualizations with Plotly
+
+```{r ggplot2-interactive}
+library(plotly)
+p7 <- p1 +
+  geom_line(aes(
+    colour = continent,
+    text = paste(
+      "Year:", year,
+      "<br>Average Life Expectancy:", round(avg_life,1),
+      "<br>Continent:", continent)),
+    alpha = 0.4)
+
+ggplotly(p7, tooltip = "text")
+```
+
+```{r ggplot2-interactive}
+p8 <- p2 +
+  geom_point(aes(
+    colour = continent,
+    text = paste(
+      "GDP per Capita:", round(gdpPercap,2),
+      "<br>Life Expectancy:", round(lifeExp,1),
+      "<br>Continent:", continent)),
+    alpha = 0.4)
+
+ggplotly(p8, tooltip = "text")
+```
